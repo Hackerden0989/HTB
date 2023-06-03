@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Reset Windows Password using Utilman.exe Trick</title>
+	<style>
+		 body {
+        background-color: rgb(15, 14, 15);
+        color: rgb(2, 95, 118);
+        font-family: Arial, sans-serif;
+      }
+		h1 {
+			font-size: 36px;
+			font-weight: bold;
+			color: #3c69c2;
+			text-align: center;
+		}
+
+		p {
+			font-size: 18px;
+			color: #0d4c42;
+			margin-bottom: 20px;
+		}
+
+	code {
+		background-color: #faf8f8;
+		padding: 4px;
+		font-family: Arial, Helvetica, sans-serif;
+	}
+
+	.highlight {
+		background-color: #ffc107;
+		font-weight: bold;
+		padding: 2px;
+		margin: 0 2px;
+		border-radius: 2px;
+	}
+
+    .image-container {
+        text-align: center;
+      }
+</style>
+</head>
+<body>
+	<h1>Reset Forgotten Windows Password with Utilman.exe Trick</h1>
+	<p>Forgot your Windows 11 password? Using your laptop some time ago and can't remember the password now? If you have previously created a password reset disk, you can get in without much trouble. In this tutorial we'll show you another method for resetting forgotten Windows 11 password - the Utilman.exe trick, without using any third-party software.
+        This way work also with windows 10, 8.1 and 7.
+    </p>
+    <center>
+       <h3> How to Reset Forgotten Windows 11 Password with Utilman.exe Trick </h3>
+        <p>Boot your locked PC from Windows 11 installation media (CD or USB). When you get to the initial setup screen, press the <b>SHIFT+ F10</b> keyboard shortcut to open Command Prompt.</p>
+        <div class="image-container">
+        <img src="1.png">
+        </div>
+        <p>press the <b>SHIFT+ F10</b> keyboard shortcut to open Command Prompt.</p>
+        <div class="image-container">
+        <img src="2.png">
+        </div>
+        <p>Now, type the following command and press Enter to open the Windows 11 System Recovery Options:</p>
+        <code><b>C:</b></code> 
+        <p>In the command, we use <b>C:</b> because it's usually the drive letter to access the hard drive after booting the device with USB, but you may need to play around to find the correct drive letter. You can confirm the location using the dir command. If the result shows the "Programs Files" and "Windows" folders, you're in the correct location.</p>
+        <p>
+            Type the following command to navigate to the System32 folder and press Enter:
+        </p>
+        <code><b>cd Windows\System32</b></code>
+        <p>
+            Type the following commands to replace the Utility Manager button with direct access to Command Prompt from the Sign-in screen and press Enter (on each line):
+        </p>
+        <p>At this point, type the following commands to make backup of your existing Accessibility Manager tool (Utilman.exe), and replace Utilman.exe with cmd.exe.</p>
+        <code><b>ren utilman.exe utilman.exe.bak</b></code><br>
+        <br>
+        <code><b>copy cmd.exe utilman.exe</b></code>
+        <br>
+        <br>
+        <br>
+        <div class="image-container">
+        <img src="3.png">
+        </div>
+        <p>Type the following command to restart the computer normally and press Enter:</p>
+        <code><b>wpeutil reboot</b></code>
+        <p>In the Sign-in screen, click the Accessibility button in the bottom-right corner to open Command Prompt.</p>
+        <div class="image-container">
+        <img src="4.png">
+        </div>
+        <p>At this point reset the device and open windows and click the accessibility button. and will open cmd and write this command</p>
+        <code><b>net user your account new password</b></code>
+        <p>and login with new password</p>
+        <p>Finally, you can close the prompt command window, and with administrative permissions, you can log onto the system.</p>
+        <p>So, finally, you have reset the Windows 11 password with Utilman.exe.</p>
+
+
+        <p><b>Thanks For Reading ❤❤</b></p>
+
+
+
+
+    </center>
+    </body>
+</html>
